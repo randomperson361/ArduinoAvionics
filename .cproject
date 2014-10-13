@@ -30,6 +30,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/Libraries/SPI}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/ds3234}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/Adafruit_GPS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/DHT}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.cpp.sketch.input.1181473436" name="CPP source files" superClass="it.baeyens.arduino.compiler.cpp.sketch.input"/>
 							</tool>
@@ -46,6 +47,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/Libraries/SPI}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/ds3234}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/Adafruit_GPS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoAvionics/CustomLibraries/DHT}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.c.sketch.input.642971629" name="C Source Files" superClass="it.baeyens.arduino.compiler.c.sketch.input"/>
 							</tool>

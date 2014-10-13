@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include "ds3234.h"
 #include "Adafruit_GPS.h"
+#include "DHT.h"
 
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
@@ -17,14 +18,17 @@
 #define GPS_TX_PIN			8
 
 #define HUMITIDY_PIN		5
-#define PITOT_PIN			14			// (A0)
-#define BATT_VOLT_PIN		15			// (A1)
+#define PITOT_PIN			14			// A0
+#define BATT_VOLT_PIN		15			// A1
 
 #define DS3234_SS_PIN 		10
 #define SD_SS_PIN 			4
 #define MOSI_PIN 			11
 #define MISO_PIN 			12
 #define SPI_CLK_PIN 		13
+
+#define IMU_SCL_PIN			19			// A5
+#define IMU_SDA_PIN			18			// A4
 
 // Define enumerations
 enum SPIType {RTC, SDCard};
