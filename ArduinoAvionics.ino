@@ -4,6 +4,7 @@
 #include <SoftwareSerial.h>
 #include <Wire.h>
 #include "ds3234.h"
+#include "Adafruit_GPS.h"
 
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
