@@ -1,3 +1,5 @@
+#include "ds3234.h"
+
 //The setup function is called once at startup of the sketch
 void setup()
 {
