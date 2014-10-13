@@ -17,7 +17,7 @@
 #define GPS_RX_PIN			7
 #define GPS_TX_PIN			8
 
-#define HUMITIDY_PIN		5
+#define HUMIDITY_PIN		5
 #define PITOT_PIN			14			// A0
 #define BATT_VOLT_PIN		15			// A1
 
@@ -30,6 +30,9 @@
 #define IMU_SCL_PIN			19			// A5
 #define IMU_SDA_PIN			18			// A4
 
+// Define other values
+#define DHT_TYPE DHT22
+
 // Define enumerations
 enum SPIType {RTC, SDCard};
 
@@ -37,6 +40,7 @@ enum SPIType {RTC, SDCard};
 File logFile;
 static char MessageBuffer[256];
 SPIType SPIFunc;
+DHT  dht(HUMIDITY_PIN,DHT_TYPE);
 
 // Define Program Functions
 static uint8_t openLogFile()
@@ -131,6 +135,9 @@ void setup()
 	// Initialize radio communication
 	Serial.begin(9600,SERIAL_8N1);
 	while(!Serial){;}
+
+	// Initialize humidity sensor
+	dht.begin();
 }
 
 // The loop function is called in an endless loop
@@ -138,7 +145,9 @@ void loop()
 {
 
 
-
+	float humidity = dht.readHumidity();
+	float temperature = dht.readTemperature(true); // reads temp in F
+	float heatIndex = dht.computeHeatIndex(temperature,humidity);
 
 
 
