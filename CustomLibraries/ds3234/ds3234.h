@@ -30,9 +30,11 @@ struct ts {
     uint8_t year_s;      /* year in short notation*/
 };
 
-void DS3234_init(const uint8_t pin, const uint8_t creg);
+void DS3234_init(const uint8_t pin);
+void DS3234_end();
 void DS3234_set(const uint8_t pin, struct ts t);
 void DS3234_get(const uint8_t pin, struct ts *t);
+uint32_t DS3234_get_unix();
 
 void DS3234_set_addr(const uint8_t pin, const uint8_t addr, const uint8_t val);
 uint8_t DS3234_get_addr(const uint8_t pin, const uint8_t addr);
@@ -72,3 +74,4 @@ uint8_t bcdtodec(const uint8_t val);
 uint8_t inp2toi(const char *cmd, const uint16_t seek);
 
 #endif
+
