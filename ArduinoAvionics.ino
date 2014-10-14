@@ -1,11 +1,23 @@
+// Default Arduino libraries
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <SD.h>
 #include <SoftwareSerial.h>
 #include <Wire.h>
+
+// Adafruit Unified Sensor Library
+#include "Adafruit_Sensor.h"
+#include "Adafruit_LSM303_U.h"
+#include "Adafruit_BMP085_U.h"
+#include "Adafruit_L3GD20_U.h"
+#include "Adafruit_10DOF.h"
+#include "DHT.h"
+#include "DHT_U.h"
+
+// Other external libraries
 #include "ds3234.h"
 #include "Adafruit_GPS.h"
-#include "DHT.h"
+
 
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
@@ -40,7 +52,7 @@ enum SPIType {RTC, SDCard};
 File logFile;
 static char MessageBuffer[256];
 SPIType SPIFunc;
-DHT  dht(HUMIDITY_PIN,DHT_TYPE);
+DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique ID to this sensor
 
 // Define Program Functions
 static uint8_t openLogFile()
@@ -136,19 +148,36 @@ void setup()
 	Serial.begin(9600,SERIAL_8N1);
 	while(!Serial){;}
 
-	// Initialize humidity sensor
+	// Initialize sensors
 	dht.begin();
+
 }
 
 // The loop function is called in an endless loop
 void loop()
 {
+	sensors_event_t event;
 
-
-	float humidity = dht.readHumidity();
-	float temperature = dht.readTemperature(true); // reads temp in F
-	float heatIndex = dht.computeHeatIndex(temperature,humidity);
-
+	// Get temperature event and print its value.
+	dht.temperature().getEvent(&event);
+	if (isnan(event.temperature)) {
+	  Serial.println("Error reading temperature!");
+	}
+	else {
+	  Serial.print("Temperature: ");
+	  Serial.print(event.temperature);
+	  Serial.println(" *C");
+	}
+	// Get humidity event and print its value.
+	dht.humidity().getEvent(&event);
+	if (isnan(event.relative_humidity)) {
+	  Serial.println("Error reading humidity!");
+	}
+	else {
+	  Serial.print("Humidity: ");
+	  Serial.print(event.relative_humidity);
+	  Serial.println("%");
+	}
 
 
 	checkRadioCommands();
