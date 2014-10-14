@@ -178,7 +178,7 @@ void loop()
 	  Serial.print(event.relative_humidity);
 	  Serial.println("%");
 	}
-
+	// TODO: add heat index calculation back in
 
 	checkRadioCommands();
 	Serial.flush();
