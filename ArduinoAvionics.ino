@@ -158,6 +158,17 @@ void loop()
 {
 	sensors_event_t event;
 
+	// TODO: get data from IMU
+	// TODO: get data from GPS
+	// TODO: get data from pitot tube
+	// TODO: get data from RTC
+	// TODO: log data to SD card
+	// TODO: create data struct
+
+	// GPS
+
+
+	// DHT 22
 	// Get temperature event and print its value.
 	dht.temperature().getEvent(&event);
 	if (isnan(event.temperature)) {
