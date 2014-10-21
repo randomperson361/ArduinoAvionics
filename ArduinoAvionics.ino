@@ -15,7 +15,6 @@
 #include "DHT_U.h"
 
 // Other external libraries
-#include "ds3234.h"
 #include "Adafruit_GPS.h"
 
 
@@ -33,7 +32,6 @@
 #define PITOT_PIN			14			// A0
 #define BATT_VOLT_PIN		15			// A1
 
-#define DS3234_SS_PIN 		10
 #define SD_SS_PIN 			4
 #define MOSI_PIN 			11
 #define MISO_PIN 			12
@@ -45,19 +43,14 @@
 // Define other values
 #define DHT_TYPE DHT22
 
-// Define enumerations
-enum SPIType {RTC, SDCard};
-
 // Define global variables
 File logFile;
 static char MessageBuffer[256];
-SPIType SPIFunc;
 DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique ID to this sensor
 
 // Define Program Functions
 static uint8_t openLogFile()
 {
-	SD.begin(SD_SS_PIN);
 	logFile = SD.open("log.txt",FILE_WRITE);
 	if(logFile)
 	{
@@ -74,45 +67,9 @@ static void closeLogFile()
 	logFile.close();
 }
 
-static uint8_t useSDCard()
-{
-	if(SPIFunc == SDCard)
-	{
-		return 0;
-	}
-	else
-	{
-		DS3234_end();
-		SPIFunc = SDCard;
-		return openLogFile();
-	}
-}
-
-static uint8_t useRTC()
-{
-	if(SPIFunc == RTC)
-	{
-		return 0;
-	}
-	else
-	{
-		closeLogFile();
-		SPIFunc = RTC;
-		DS3234_init(DS3234_SS_PIN);
-		return 0;
-	}
-}
-
 static void printTime()
 {
-	useRTC();
-	ts time;
-	DS3234_get(DS3234_SS_PIN,&time);
-	sprintf(MessageBuffer,"%02u/%02u/%4d %02d:%02d:%02d\n",time.mon,time.mday,time.year,time.hour,time.min,time.sec);
-	sprintf(MessageBuffer,"TEST\n");
-	Serial.print(useSDCard());
-	logFile.print(MessageBuffer);
-	Serial.print(MessageBuffer);
+	// TODO: add new get time function
 }
 
 static void processRadio(uint8_t Signal)
@@ -135,18 +92,14 @@ void setup()
 {
 	// Initialize pins									// TODO: initialize other pins
 	pinMode(SD_SS_PIN,OUTPUT);
-	pinMode(DS3234_SS_PIN,OUTPUT);
-
 	digitalWrite(SD_SS_PIN,1);
-	digitalWrite(DS3234_SS_PIN,1);
-
-	// Initialize SPI Communication
-	DS3234_init(DS3234_SS_PIN);
-	SPIFunc = RTC;
 
 	// Initialize radio communication
 	Serial.begin(9600,SERIAL_8N1);
 	while(!Serial){;}
+
+	// Initialize SD Card
+	SD.begin(SD_SS_PIN);
 
 	// Initialize sensors
 	//dht.begin();
@@ -155,12 +108,8 @@ void setup()
 // The loop function is called in an endless loop
 void loop()
 {
-	// Tested: works
-	printTime();
+	openLogFile();
 	/*
-	Serial.print(useSDCard());
-	sprintf(MessageBuffer,"%u\n",++i);
-	logFile.print(MessageBuffer);
 
 	sensors_event_t event;
 
