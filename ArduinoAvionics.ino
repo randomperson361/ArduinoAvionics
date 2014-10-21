@@ -57,10 +57,7 @@ DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique 
 // Define Program Functions
 static uint8_t openLogFile()
 {
-	if(!SD.begin(4))
-	{
-		return 1;		// SD card error
-	}
+	SD.begin(SD_SS_PIN);
 	logFile = SD.open("log.txt",FILE_WRITE);
 	if(logFile)
 	{
@@ -68,7 +65,7 @@ static uint8_t openLogFile()
 	}
 	else
 	{
-		return 2;		// file open error
+		return 1;		// file open error
 	}
 }
 
@@ -101,7 +98,7 @@ static uint8_t useRTC()
 	{
 		closeLogFile();
 		SPIFunc = RTC;
-		DS3234_init(DS3234_SS_PIN);;
+		DS3234_init(DS3234_SS_PIN);
 		return 0;
 	}
 }
@@ -111,7 +108,10 @@ static void printTime()
 	useRTC();
 	ts time;
 	DS3234_get(DS3234_SS_PIN,&time);
-	sprintf(MessageBuffer,"%02u/%02u/%4d %02d:%02d:%02d\t",time.mon,time.mday,time.year,time.hour,time.min,time.sec);
+	sprintf(MessageBuffer,"%02u/%02u/%4d %02d:%02d:%02d\n",time.mon,time.mday,time.year,time.hour,time.min,time.sec);
+	sprintf(MessageBuffer,"TEST\n");
+	Serial.print(useSDCard());
+	logFile.print(MessageBuffer);
 	Serial.print(MessageBuffer);
 }
 
@@ -149,13 +149,19 @@ void setup()
 	while(!Serial){;}
 
 	// Initialize sensors
-	dht.begin();
-
+	//dht.begin();
 }
 
 // The loop function is called in an endless loop
 void loop()
 {
+	// Tested: works
+	printTime();
+	/*
+	Serial.print(useSDCard());
+	sprintf(MessageBuffer,"%u\n",++i);
+	logFile.print(MessageBuffer);
+
 	sensors_event_t event;
 
 	// TODO: get data from IMU
@@ -192,5 +198,6 @@ void loop()
 	// TODO: add heat index calculation back in
 
 	checkRadioCommands();
-	Serial.flush();
+	Serial.flush();*/
+	delay(1000);
 }

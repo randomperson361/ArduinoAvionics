@@ -60,7 +60,7 @@ void DS3234_end()
 {
 	SPI.setDataMode(SPI_MODE0);
 	SPI.end();
-	delay(10);
+	delay(100);
 }
 
 void DS3234_set(const uint8_t pin, struct ts t)
