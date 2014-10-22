@@ -143,13 +143,12 @@ void setup()
 void loop()
 {
 	//openLogFile();
-	GPSSerial.listen();
+	//GPSSerial.listen();
 	while(!GPS.newNMEAreceived())
 	{
-		Serial.println("waiting...");
-		delay(2000);
+		GPS.read();
 	}
-	Serial.println("GOT MESSAGE!");
+
 	if (GPS.parse(GPS.lastNMEA()))
 	{
 		printGPS();
@@ -204,6 +203,6 @@ void loop()
 
 	checkRadioCommands();
 	Serial.flush();*/
-	delay(1000);
+	delay(600);
 }
 
