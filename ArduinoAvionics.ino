@@ -47,7 +47,7 @@ SoftwareSerial GPSSerial(8, 7);
 
 // Define global variables
 File logFile;
-static char MessageBuffer[256];
+//static char MessageBuffer[256];
 DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique ID to this sensor
 Adafruit_GPS GPS(&GPSSerial);
 
@@ -68,11 +68,6 @@ static uint8_t openLogFile()
 static void closeLogFile()
 {
 	logFile.close();
-}
-
-static void printTime()
-{
-	// TODO: add new get time function
 }
 
 static void processRadio(uint8_t Signal)
@@ -116,6 +111,33 @@ void printGPS()
     }
 }
 
+void logGPS()
+{
+    logFile.print("\nTime: ");
+    logFile.print(GPS.hour, DEC); logFile.print(':');
+    logFile.print(GPS.minute, DEC); logFile.print(':');
+    logFile.print(GPS.seconds, DEC); logFile.print('.');
+    logFile.println(GPS.milliseconds);
+    logFile.print("Date: ");
+    logFile.print(GPS.day, DEC); logFile.print('/');
+    logFile.print(GPS.month, DEC); logFile.print("/20");
+    logFile.println(GPS.year, DEC);
+    logFile.print("Fix: "); logFile.print((int)GPS.fix);
+    logFile.print(" quality: "); logFile.println((int)GPS.fixquality);
+    if (GPS.fix)
+    {
+      logFile.print("Location: ");
+      logFile.print(GPS.latitude, 4); logFile.print(GPS.lat);
+      logFile.print(", ");
+      logFile.print(GPS.longitude, 4); logFile.println(GPS.lon);
+
+      logFile.print("Speed (knots): "); logFile.println(GPS.speed);
+      logFile.print("Angle: "); logFile.println(GPS.angle);
+      logFile.print("Altitude: "); logFile.println(GPS.altitude);
+      logFile.print("Satellites: "); logFile.println((int)GPS.satellites);
+    }
+}
+
 //The setup function is called once at startup of the sketch
 void setup()
 {
@@ -129,30 +151,38 @@ void setup()
 
 	// Initialize SD Card
 	SD.begin(SD_SS_PIN);
+	//openLogFile();
 
 	// Initialize sensors
-	//dht.begin();
+	dht.begin();
 
 	// Initialize GPS
 	GPS.begin(9600);
-    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
-    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   				// 1 Hz update rate
+    //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
+    //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_100_MILLIHERTZ);   				// 1 Hz update rate
 }
 
 // The loop function is called in an endless loop
 void loop()
 {
-	//openLogFile();
+	// Read GPS
 	//GPSSerial.listen();
-	while(!GPS.newNMEAreceived())
+	for (int i = 0; i<2; i++)
 	{
+		while(!GPS.newNMEAreceived())
+		{
 		GPS.read();
+		}
+		Serial.println(GPS.lastNMEA());
+	}
+	//if (GPS.parse(GPS.lastNMEA()))
+	{
+		//printGPS();
+		//logGPS();
 	}
 
-	if (GPS.parse(GPS.lastNMEA()))
-	{
-		printGPS();
-	}
+
+	sensors_event_t event;
 
 	/*
 	  // if a sentence is received, we can check the checksum, parse it...
@@ -167,7 +197,7 @@ void loop()
 	  }
 
 	/*
-	sensors_event_t event;
+
 
 	// TODO: get data from IMU
 	// TODO: get data from GPS
@@ -175,34 +205,36 @@ void loop()
 	// TODO: log data to SD card
 	// TODO: create data struct
 
-	// GPS
-
+	*/
 
 	// DHT 22
 	// Get temperature event and print its value.
 	dht.temperature().getEvent(&event);
 	if (isnan(event.temperature)) {
-	  Serial.println("Error reading temperature!");
+	  Serial.println(F("Error reading temperature!"));
 	}
 	else {
-	  Serial.print("Temperature: ");
+	  Serial.print(F("Temperature: "));
 	  Serial.print(event.temperature);
-	  Serial.println(" *C");
+	  Serial.println(F(" *C"));
 	}
 	// Get humidity event and print its value.
 	dht.humidity().getEvent(&event);
 	if (isnan(event.relative_humidity)) {
-	  Serial.println("Error reading humidity!");
+	  Serial.println(F("Error reading humidity!"));
 	}
 	else {
-	  Serial.print("Humidity: ");
+	  Serial.print(F("Humidity: "));
 	  Serial.print(event.relative_humidity);
-	  Serial.println("%");
+	  Serial.println(F("%"));
 	}
 	// TODO: add heat index calculation back in
 
-	checkRadioCommands();
-	Serial.flush();*/
-	delay(600);
+	//checkRadioCommands();
+	//delay(100);
+
+	// Flush serials
+	Serial.flush();
+	//logFile.flush();
 }
 

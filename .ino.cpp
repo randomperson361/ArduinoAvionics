@@ -1,7 +1,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2014-10-22 17:02:32
+//This file has been generated on 2014-10-22 18:49:51
 
 #include "Arduino.h"
 #include <Arduino.h>
@@ -19,10 +19,10 @@
 #include "Adafruit_GPS.h"
 static uint8_t openLogFile() ;
 static void closeLogFile() ;
-static void printTime() ;
 static void processRadio(uint8_t Signal) ;
 static void checkRadioCommands() ;
 void printGPS() ;
+void logGPS() ;
 void setup() ;
 void loop() ;
 
