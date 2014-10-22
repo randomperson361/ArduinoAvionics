@@ -44,7 +44,7 @@ Adafruit_GPS GPS(&mySerial);
 
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
 // Set to 'true' if you want to debug and listen to the raw GPS sentences.
-#define GPSECHO  true
+#define GPSECHO  false
 
 // this keeps track of whether we're using the interrupt
 // off by default!
@@ -80,11 +80,9 @@ void setup()
   // the nice thing about this code is you can have a timer0 interrupt go off
   // every 1 millisecond, and read data from the GPS for you. that makes the
   // loop code a heck of a lot easier!
-  useInterrupt(true);
+  useInterrupt(false);
 
   delay(1000);
-  // Ask for firmware version
-  mySerial.println(PMTK_Q_RELEASE);
 }
 
 
