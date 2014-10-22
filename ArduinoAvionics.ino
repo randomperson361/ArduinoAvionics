@@ -1,13 +1,8 @@
-#include <Adafruit_GPS.h>
-#include <SoftwareSerial.h>
-
-SoftwareSerial mySerial(8, 7);
-Adafruit_GPS GPS(&mySerial);
 
 
-// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
-// Set to 'true' if you want to debug and listen to the raw GPS sentences.
-#define GPSECHO  true
+
+
+
 
 // this keeps track of whether we're using the interrupt
 // off by default!
@@ -154,7 +149,6 @@ void loop()                     // run over and over again
 // Other external libraries
 #include "Adafruit_GPS.h"
 
-
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
 #define RADIO_TX_PIN 		1
@@ -179,11 +173,16 @@ void loop()                     // run over and over again
 
 // Define other values
 #define DHT_TYPE DHT22
+#define GPSECHO  true			// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console. Set to 'true' if you want to debug and listen to the raw GPS sentences.
+
+// Define Software Serial Ports
+SoftwareSerial GPSSerial(8, 7);
 
 // Define global variables
 File logFile;
 static char MessageBuffer[256];
 DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique ID to this sensor
+Adafruit_GPS GPS(&GPSSerial);
 
 // Define Program Functions
 static uint8_t openLogFile()
@@ -253,7 +252,6 @@ void loop()
 	// TODO: get data from IMU
 	// TODO: get data from GPS
 	// TODO: get data from pitot tube
-	// TODO: get data from RTC
 	// TODO: log data to SD card
 	// TODO: create data struct
 
