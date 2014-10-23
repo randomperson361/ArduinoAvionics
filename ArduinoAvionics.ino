@@ -165,6 +165,7 @@ void setup()
 // The loop function is called in an endless loop
 void loop()
 {
+	/*
 	// Read GPS
 	//GPSSerial.listen();
 	for (int i = 0; i<2; i++)
@@ -184,7 +185,7 @@ void loop()
 
 	sensors_event_t event;
 
-	/*
+
 	  // if a sentence is received, we can check the checksum, parse it...
 	  if (GPS.newNMEAreceived()) {
 	    // a tricky thing here is if we print the NMEA sentence, or data
@@ -205,7 +206,7 @@ void loop()
 	// TODO: log data to SD card
 	// TODO: create data struct
 
-	*/
+
 
 	// DHT 22
 	// Get temperature event and print its value.
@@ -236,5 +237,7 @@ void loop()
 	// Flush serials
 	Serial.flush();
 	//logFile.flush();
+
+	 */
 }
 
