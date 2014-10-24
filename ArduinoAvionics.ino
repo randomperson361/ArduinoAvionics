@@ -124,5 +124,5 @@ void loop(void)
     Serial.println(F(""));
   }
 
-  delay(100);
+  delay(1000);
 }
