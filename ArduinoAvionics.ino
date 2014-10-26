@@ -35,37 +35,15 @@ float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
 /**************************************************************************/
 void initSensors()
 {
-  if(!accel.begin())
-  {
-    /* There was a problem detecting the LSM303 ... check your connections */
-    Serial.println(F("Ooops, no LSM303 detected ... Check your wiring!"));
-    while(1);
-  }
-  if(!mag.begin())
-  {
-    /* There was a problem detecting the LSM303 ... check your connections */
-    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
-    while(1);
-  }
-  if(!bmp.begin())
-  {
-    /* There was a problem detecting the BMP180 ... check your connections */
-    Serial.println("Ooops, no BMP180 detected ... Check your wiring!");
-    while(1);
-  }
+	/* Enable auto-ranging */
+	gyro.enableAutoRange(true);
 
-  /* Enable auto-ranging */
-  gyro.enableAutoRange(true);
-
-  /* Initialise the sensor */
-  if(!gyro.begin())
-  {
-    /* There was a problem detecting the L3GD20 ... check your connections */
-    Serial.println("Ooops, no L3GD20 detected ... Check your wiring!");
-    while(1);
-  }
-
-  dht.begin();
+	// Initialize all sensors
+	accel.begin();
+	mag.begin();
+	bmp.begin();
+	gyro.begin();
+	dht.begin();
 }
 
 /**************************************************************************/
@@ -76,7 +54,6 @@ void initSensors()
 void setup(void)
 {
   Serial.begin(115200);
-  Serial.println(F("Adafruit 10 DOF Pitch/Roll/Heading Example")); Serial.println("");
 
   /* Initialise the sensors */
   initSensors();
