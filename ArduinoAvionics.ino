@@ -2,7 +2,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <SD.h>
-#include <SoftwareSerial.h>
 #include <Wire.h>
 
 // Adafruit Unified Sensor Library
@@ -17,6 +16,12 @@
 // Other external libraries
 #include "Adafruit_GPS.h"
 
+// Enable MEGA 2560 additional serial ports
+extern HardwareSerial Serial1;
+extern HardwareSerial Serial2;
+extern HardwareSerial Serial3;
+
+
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
 #define RADIO_TX_PIN 		1
@@ -24,26 +29,25 @@
 #define DECTALK_RX_PIN		2
 #define DECTALK_TX_PIN		3
 
-#define GPS_RX_PIN			7
-#define GPS_TX_PIN			8
+#define GPS_RX_PIN			19
+#define GPS_TX_PIN			18
 
 #define HUMIDITY_PIN		5
-#define PITOT_PIN			14			// A0
-#define BATT_VOLT_PIN		15			// A1
+#define PITOT_PIN			A0
 
 #define SD_SS_PIN 			4
 #define MOSI_PIN 			11
 #define MISO_PIN 			12
 #define SPI_CLK_PIN 		13
 
-#define IMU_SCL_PIN			19			// A5
-#define IMU_SDA_PIN			18			// A4
+#define IMU_SCL_PIN			21
+#define IMU_SDA_PIN			20
 
 // Define other values
 #define DHT_TYPE DHT22
 
 // Define Software Serial Ports
-SoftwareSerial GPSSerial(8, 7);
+HardwareSerial GPSSerial = Serial1;
 
 // Define global variables
 File logFile;
@@ -159,7 +163,7 @@ void setup()
 	// Initialize GPS
 	GPS.begin(9600);
     //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
-    //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_100_MILLIHERTZ);   				// 1 Hz update rate
+    //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_100_MILLIHERTZ);   	// 100 miliHz update rate
 }
 
 // The loop function is called in an endless loop
@@ -200,7 +204,6 @@ void loop()
 
 
 	// TODO: get data from IMU
-	// TODO: get data from GPS
 	// TODO: get data from pitot tube
 	// TODO: log data to SD card
 	// TODO: create data struct
