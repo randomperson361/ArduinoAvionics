@@ -31,7 +31,7 @@ extern HardwareSerial Serial3;
 #define GPS_RX_PIN			19
 #define GPS_TX_PIN			18
 
-#define HUMIDITY_PIN		5
+#define DHT_PIN				5
 #define PITOT_PIN			A0
 
 #define SD_SS_PIN 			4
@@ -45,13 +45,25 @@ extern HardwareSerial Serial3;
 // Define other values
 #define DHT_TYPE DHT22
 
-// Define Software Serial Ports
-HardwareSerial GPSSerial = Serial1;
-
 // Define global variables
 File logFile;
 //static char MessageBuffer[256];
-DHT_Unified dht = DHT_Unified(HUMIDITY_PIN,DHT_TYPE);				// TODO: assign unique ID to this sensor
+float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;		// Update this with the correct SLP for accurate altitude measurements
+
+// Setup all sensors
+Adafruit_10DOF                dof   = Adafruit_10DOF();
+Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
+Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
+Adafruit_L3GD20_Unified 	  gyro = Adafruit_L3GD20_Unified(20);
+Adafruit_BMP085_Unified       bmp   = Adafruit_BMP085_Unified(18001);
+DHT_Unified 				  dht(DHT_PIN, DHT_TYPE);
+sensors_event_t accel_event;
+sensors_event_t mag_event;
+sensors_event_t bmp_event;
+sensors_vec_t   orientation;
+sensors_event_t dht_event;
+sensors_event_t gyro_event;
+HardwareSerial GPSSerial = Serial1;
 Adafruit_GPS GPS(&GPSSerial);
 
 // Define Program Functions
@@ -149,14 +161,19 @@ void setup()
 	digitalWrite(SD_SS_PIN,1);
 
 	// Initialize radio communication
-	Serial.begin(9600);
+	Serial.begin(115200);
 	while(!Serial){;}
 
 	// Initialize SD Card
-	SD.begin(SD_SS_PIN);
+	//SD.begin(SD_SS_PIN);
 	//openLogFile();
 
 	// Initialize sensors
+	gyro.enableAutoRange(true);
+	accel.begin();
+	mag.begin();
+	bmp.begin();
+	gyro.begin();
 	dht.begin();
 
 	// Initialize GPS
@@ -168,8 +185,8 @@ void setup()
 // The loop function is called in an endless loop
 void loop()
 {
+	/*
 	// Read GPS
-	//GPSSerial.listen();
 	for (int i = 0; i<2; i++)
 	{
 		while(!GPS.newNMEAreceived())
@@ -185,7 +202,6 @@ void loop()
 	}
 
 
-	sensors_event_t event;
 
 	/*
 	  // if a sentence is received, we can check the checksum, parse it...
@@ -198,38 +214,78 @@ void loop()
 	    if ()   // this also sets the newNMEAreceived() flag to false
 	      return;  // we can fail to parse a sentence in which case we should just wait for another
 	  }
-
-	/*
-
-
-	// TODO: get data from IMU
-	// TODO: get data from pitot tube
-	// TODO: log data to SD card
-	// TODO: create data struct
-
 	*/
 
-	// DHT 22
-	// Get temperature event and print its value.
-	dht.temperature().getEvent(&event);
-	if (isnan(event.temperature)) {
+
+	  /* Read the accelerometer and magnetometer */
+  accel.getEvent(&accel_event);
+  mag.getEvent(&mag_event);
+
+  /* Use the new fusionGetOrientation function to merge accel/mag data */
+  if (dof.fusionGetOrientation(&accel_event, &mag_event, &orientation))
+  {
+    /* 'orientation' should have valid .roll and .pitch fields */
+    Serial.print(F("Orientation: "));
+    Serial.print(orientation.roll);
+    Serial.print(F(" "));
+    Serial.print(orientation.pitch);
+    Serial.print(F(" "));
+    Serial.print(orientation.heading);
+    Serial.println(F(""));
+  }
+
+  /* Calculate the altitude using the barometric pressure sensor */
+  bmp.getEvent(&bmp_event);
+  if (bmp_event.pressure)
+  {
+    /* Get ambient temperature in C */
+    float temperature;
+    bmp.getTemperature(&temperature);
+    /* Convert atmospheric pressure, SLP and temp to altitude */
+    Serial.print(F("Alt: "));
+    Serial.print(bmp.pressureToAltitude(seaLevelPressure,
+                                        bmp_event.pressure,
+                                        temperature));
+    Serial.println(F(""));
+    /* Display the temperature */
+    Serial.print(F("Temp: "));
+    Serial.print(temperature);
+    Serial.println(F(""));
+    Serial.print(F("Pressure "));
+    Serial.print(bmp_event.pressure);
+    Serial.println(F(""));
+  }
+
+  /* Get a new sensor event */
+  gyro.getEvent(&gyro_event);
+
+  /* Display the results (speed is measured in rad/s) */
+  Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
+  Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
+  Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");
+  Serial.println("rad/s ");
+
+	dht.temperature().getEvent(&dht_event);
+	if (isnan(dht_event.temperature)) {
 	  Serial.println(F("Error reading temperature!"));
 	}
 	else {
 	  Serial.print(F("Temperature: "));
-	  Serial.print(event.temperature);
+	  Serial.print(dht_event.temperature);
 	  Serial.println(F(" *C"));
 	}
 	// Get humidity event and print its value.
-	dht.humidity().getEvent(&event);
-	if (isnan(event.relative_humidity)) {
+	dht.humidity().getEvent(&dht_event);
+	if (isnan(dht_event.relative_humidity)) {
 	  Serial.println(F("Error reading humidity!"));
 	}
 	else {
 	  Serial.print(F("Humidity: "));
-	  Serial.print(event.relative_humidity);
-	  Serial.println(F("%"));
+	  Serial.print(dht_event.relative_humidity);
+	  Serial.println(F("%\n\n"));
 	}
+
+
 	// TODO: add heat index calculation back in
 
 	//checkRadioCommands();
@@ -238,5 +294,7 @@ void loop()
 	// Flush serials
 	Serial.flush();
 	//logFile.flush();
+
+	delay(1000);
 }
 
