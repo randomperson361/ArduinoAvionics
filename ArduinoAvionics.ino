@@ -43,7 +43,8 @@ extern HardwareSerial Serial3;
 #define IMU_SDA_PIN			20
 
 // Define other values
-#define DHT_TYPE DHT22
+#define DHT_TYPE			DHT22
+#define DELAY_MS			1000							// The lower this number is the faster we will report data, get as low as possible
 
 // Define global variables
 File logFile;
@@ -199,8 +200,9 @@ void setup()
 
 	// Initialize GPS
 	GPS.begin(9600);
-    //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
-    //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_100_MILLIHERTZ);   	// 100 miliHz update rate
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
+    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   				// set NMEA printing rate
+	GPS.sendCommand(PMTK_API_SET_FIX_CTL_1HZ);					// set position update rate
 	useInterrupt(true);
 	timer = millis();
 }
@@ -220,23 +222,7 @@ void loop()
 		timer = millis();
 	}
 
-	/*
-	// Read GPS
-	for (int i = 0; i<2; i++)
-	{
-		while(!GPS.newNMEAreceived())
-		{
-			GPS.read();
-		}
-	}
-
-	if (GPS.parse(GPS.lastNMEA()))
-	{
-		printGPS();
-		//logGPS();
-	}
-	*/
-	if (millis() - timer > 2000)
+	if (millis() - timer > DELAY_MS)
 	{
 	    timer = millis(); // reset the timer
 	    printGPS();
