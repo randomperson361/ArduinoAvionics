@@ -21,7 +21,6 @@ extern HardwareSerial Serial1;
 extern HardwareSerial Serial2;
 extern HardwareSerial Serial3;
 
-
 // Define pins used for Arduino operation
 #define RADIO_RX_PIN 		0
 #define RADIO_TX_PIN 		1
