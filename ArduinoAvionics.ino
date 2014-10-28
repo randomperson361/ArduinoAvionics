@@ -49,6 +49,8 @@ extern HardwareSerial Serial3;
 File logFile;
 //static char MessageBuffer[256];
 float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;		// Update this with the correct SLP for accurate altitude measurements
+boolean usingInterrupt = false;
+uint32_t timer;
 
 // Setup all sensors
 Adafruit_10DOF                dof   = Adafruit_10DOF();
@@ -99,6 +101,26 @@ static void checkRadioCommands()
 	}
 }
 
+// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
+SIGNAL(TIMER0_COMPA_vect)
+{
+  char c = GPS.read();
+}
+
+void useInterrupt(boolean v) {
+  if (v) {
+    // Timer0 is already used for millis() - we'll just interrupt somewhere
+    // in the middle and call the "Compare A" function above
+    OCR0A = 0xAF;
+    TIMSK0 |= _BV(OCIE0A);
+    usingInterrupt = true;
+  } else {
+    // do not call the interrupt function COMPA anymore
+    TIMSK0 &= ~_BV(OCIE0A);
+    usingInterrupt = false;
+  }
+}
+
 void printGPS()
 {
     Serial.print("\nTime: ");
@@ -118,7 +140,6 @@ void printGPS()
       Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
       Serial.print(", ");
       Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
-
       Serial.print("Speed (knots): "); Serial.println(GPS.speed);
       Serial.print("Angle: "); Serial.println(GPS.angle);
       Serial.print("Altitude: "); Serial.println(GPS.altitude);
@@ -180,100 +201,124 @@ void setup()
 	GPS.begin(9600);
     //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);				// output RMC (recommended minimum) and GGA (fix data) including altitude
     //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_100_MILLIHERTZ);   	// 100 miliHz update rate
+	useInterrupt(true);
+	timer = millis();
 }
 
 // The loop function is called in an endless loop
 void loop()
 {
+	if (GPS.newNMEAreceived())
+	{
+		if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
+	    return;  // we can fail to parse a sentence in which case we should just wait for another
+	}
+
+	// if millis() or timer wraps around, we'll just reset it
+	if (timer > millis())
+	{
+		timer = millis();
+	}
+
+	/*
 	// Read GPS
 	for (int i = 0; i<2; i++)
 	{
 		while(!GPS.newNMEAreceived())
 		{
-		GPS.read();
+			GPS.read();
 		}
 	}
+
 	if (GPS.parse(GPS.lastNMEA()))
 	{
 		printGPS();
 		//logGPS();
 	}
-
-	/* Read the accelerometer and magnetometer */
-    accel.getEvent(&accel_event);
-    mag.getEvent(&mag_event);
-
-    /* Use the new fusionGetOrientation function to merge accel/mag data */
-    if (dof.fusionGetOrientation(&accel_event, &mag_event, &orientation))
-    {
-    	/* 'orientation' should have valid .roll and .pitch fields */
-    	Serial.print(F("Orientation: "));
-    	Serial.print(orientation.roll);
-    	Serial.print(F(" "));
-    	Serial.print(orientation.pitch);
-    	Serial.print(F(" "));
-    	Serial.print(orientation.heading);
-    	Serial.println(F(""));
-    }
-
-    /* Calculate the altitude using the barometric pressure sensor */
-    bmp.getEvent(&bmp_event);
-    if (bmp_event.pressure)
-    {
-    	/* Get ambient temperature in C */
-    	float temperature;
-    	bmp.getTemperature(&temperature);
-    	/* Convert atmospheric pressure, SLP and temp to altitude */
-    	Serial.print(F("Alt: "));
-    	Serial.print(bmp.pressureToAltitude(seaLevelPressure,bmp_event.pressure,temperature));
-    	Serial.println(F(""));
-    	/* Display the temperature */
-    	Serial.print(F("Temp: "));
-    	Serial.print(temperature);
-    	Serial.println(F(""));
-    	Serial.print(F("Pressure "));
-    	Serial.print(bmp_event.pressure);
-    	Serial.println(F(""));
-    }
-
-    /* Get a new sensor event */
-    gyro.getEvent(&gyro_event);
-
-    /* Display the results (speed is measured in rad/s) */
-    Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
-    Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
-    Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");
-    Serial.println("rad/s ");
-
-	dht.temperature().getEvent(&dht_event);
-	if (isnan(dht_event.temperature))
+	*/
+	if (millis() - timer > 2000)
 	{
-		Serial.println(F("Error reading temperature!"));
-	}
-	else
-	{
-		Serial.print(F("Temperature: "));
-		Serial.print(dht_event.temperature);
-		Serial.println(F(" *C"));
-	}
+	    timer = millis(); // reset the timer
+	    printGPS();
 
-	// Get humidity event and print its value.
-	dht.humidity().getEvent(&dht_event);
-	if (isnan(dht_event.relative_humidity))
-	{
-		Serial.println(F("Error reading humidity!"));
-	}
-	else
-	{
-		Serial.print(F("Humidity: "));
-		Serial.print(dht_event.relative_humidity);
-		Serial.println(F("%\n\n"));
-	}
-	// TODO: add heat index calculation back in
+	    /* Read the accelerometer and magnetometer */
+	    accel.getEvent(&accel_event);
+		mag.getEvent(&mag_event);
 
-	//checkRadioCommands();
+		/* Use the new fusionGetOrientation function to merge accel/mag data */
+		if (dof.fusionGetOrientation(&accel_event, &mag_event, &orientation))
+		{
+			/* 'orientation' should have valid .roll and .pitch fields */
+			Serial.print(F("Orientation: "));
+			Serial.print(orientation.roll);
+			Serial.print(F(" "));
+			Serial.print(orientation.pitch);
+			Serial.print(F(" "));
+			Serial.print(orientation.heading);
+			Serial.println(F(""));
+		}
 
-	// Flush serials
-	Serial.flush();
-	//logFile.flush();
+		/* Calculate the altitude using the barometric pressure sensor */
+		bmp.getEvent(&bmp_event);
+		if (bmp_event.pressure)
+		{
+			/* Get ambient temperature in C */
+			float temperature;
+			bmp.getTemperature(&temperature);
+			/* Convert atmospheric pressure, SLP and temp to altitude */
+			Serial.print(F("Alt: "));
+			Serial.print(bmp.pressureToAltitude(seaLevelPressure,bmp_event.pressure,temperature));
+			Serial.println(F(""));
+			/* Display the temperature */
+			Serial.print(F("Temp: "));
+			Serial.print(temperature);
+			Serial.println(F(""));
+			Serial.print(F("Pressure "));
+			Serial.print(bmp_event.pressure);
+			Serial.println(F(""));
+		}
+
+		/* Get a new sensor event */
+		gyro.getEvent(&gyro_event);
+
+		/* Display the results (speed is measured in rad/s) */
+		Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
+		Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
+		Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");
+		Serial.println("rad/s ");
+
+		dht.temperature().getEvent(&dht_event);
+		if (isnan(dht_event.temperature))
+		{
+			Serial.println(F("Error reading temperature!"));
+		}
+		else
+		{
+			Serial.print(F("Temperature: "));
+			Serial.print(dht_event.temperature);
+			Serial.println(F(" *C"));
+		}
+
+		// Get humidity event and print its value.
+		dht.humidity().getEvent(&dht_event);
+		if (isnan(dht_event.relative_humidity))
+		{
+			Serial.println(F("Error reading humidity!"));
+		}
+		else
+		{
+			Serial.print(F("Humidity: "));
+			Serial.print(dht_event.relative_humidity);
+			Serial.println(F("%\n\n"));
+		}
+		// TODO: add heat index calculation back in
+
+		//checkRadioCommands();
+
+		Serial.println(millis());
+
+		// Flush serials
+		Serial.flush();
+		//logFile.flush();
+	}
 }
