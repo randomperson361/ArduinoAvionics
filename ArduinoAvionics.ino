@@ -51,8 +51,8 @@ File logFile;
 //static char MessageBuffer[256];
 float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;		// Update this with the correct SLP for accurate altitude measurements
 boolean usingInterrupt = false;
-uint32_t timer;
-float temperature;
+uint32_t timer= millis();
+float BaroTemp, DHTTemp, DHTHum;
 
 // Setup all sensors
 Adafruit_10DOF                dof   = Adafruit_10DOF();
@@ -207,7 +207,7 @@ void printIMU()
 void updateBaro()
 {
 	bmp.getEvent(&bmp_event);
-	bmp.getTemperature(&temperature);
+	bmp.getTemperature(&BaroTemp);
 }
 
 void printBaro()
@@ -216,7 +216,7 @@ void printBaro()
 	{
 		/* Convert atmospheric pressure, SLP and temp to altitude */
 		Serial.print(F("Alt: "));
-		Serial.print(bmp.pressureToAltitude(seaLevelPressure,bmp_event.pressure,temperature));
+		Serial.print(bmp.pressureToAltitude(seaLevelPressure,bmp_event.pressure,BaroTemp));
 		Serial.println(F(""));
 		Serial.print(F("Pressure "));
 		Serial.print(bmp_event.pressure);
@@ -227,24 +227,29 @@ void printBaro()
 void updateDHT()
 {
 	dht.temperature().getEvent(&dht_event);
+	DHTTemp = dht_event.temperature;
 	dht.humidity().getEvent(&dht_event);
+	DHTHum = dht_event.relative_humidity;
 }
 
 void printDHT()
 {
-	if (!isnan(dht_event.temperature))
+
+	if (!isnan(DHTTemp))
 	{
 		Serial.print(F("Temperature: "));
-		Serial.print(dht_event.temperature);
+		Serial.print(DHTTemp);
 		Serial.println(F(" *C"));
 	}
-	if (!isnan(dht_event.relative_humidity))
+	if (!isnan(DHTHum))
 	{
 		Serial.print(F("Humidity: "));
-		Serial.print(dht_event.relative_humidity);
-		Serial.println(F("%\n\n"));
+		Serial.print(DHTHum);
+		Serial.println(F("%"));
 	}
-	// TODO: add heat index calculation back in
+	Serial.print(F("Heat Index: "));
+	Serial.print(dht.computeHeatIndex((DHTTemp*(9./5.)+32.),DHTHum));
+	Serial.println("\n\n");
 }
 
 //The setup function is called once at startup of the sketch
@@ -276,7 +281,6 @@ void setup()
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   				// set NMEA printing rate
 	GPS.sendCommand(PMTK_API_SET_FIX_CTL_1HZ);					// set position update rate
 	useInterrupt(true);
-	timer = millis();
 }
 
 // The loop function is called in an endless loop
