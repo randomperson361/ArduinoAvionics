@@ -16,6 +16,7 @@
 // Other external libraries
 #include "Adafruit_GPS.h"
 #include "Emic2TtsModule.h"
+#include <Math.h>
 
 // Enable MEGA 2560 additional serial ports
 extern HardwareSerial Serial1;
@@ -46,14 +47,15 @@ extern HardwareSerial Serial3;
 // Define other values
 #define DHT_TYPE			DHT22
 #define DELAY_MS			1000							// The lower this number is the faster we will report data, get as low as possible
+#define RHO					1.21328							// TODO: calculate RHO based on standard atmosphere accounting for temp and pressure
 
 // Define global variables
 File logFile;
 //static char MessageBuffer[256];
 float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;		// Update this with the correct SLP for accurate altitude measurements
 boolean usingInterrupt = false;
-uint32_t timer= millis();
-float BaroTemp, DHTTemp, DHTHum;
+uint32_t timer = millis();
+float BaroTemp, DHTTemp, DHTHum, Airspeed, dP, PitotVoltage;
 
 // Setup all sensors
 Adafruit_10DOF                dof   = Adafruit_10DOF();
@@ -252,7 +254,21 @@ void printDHT()
 	}
 	Serial.print(F("Heat Index: "));
 	Serial.print(dht.computeHeatIndex(DHTTemp,DHTHum));
-	Serial.println("\n\n");
+	Serial.println("");
+}
+
+void updatePitot()
+{
+	PitotVoltage = analogRead(A0)*0.004883;
+	dP = ((PitotVoltage/5.) - 0.5)/0.2;
+	Airspeed = sqrt((2000.*dP)/RHO)*1.94384;					// in knots
+}
+
+void printPitot()
+{
+	Serial.print("Airspeed: ");
+	Serial.print(Airspeed);
+	Serial.println(" knots\n\n");
 }
 
 //The setup function is called once at startup of the sketch
@@ -305,11 +321,6 @@ void setup()
 // The loop function is called in an endless loop
 void loop()
 {
-	if (EMIC.ready())
-	{
-		//EMIC.playSingingDemo();
-	}
-
 	// Parse GPS data if available
 	if (GPS.newNMEAreceived())
 	{
@@ -337,6 +348,8 @@ void loop()
 	    printBaro();
 	    updateDHT();
 	    printDHT();
+	    updatePitot();
+	    printPitot();
 
 		// Flush serials
 		Serial.flush();
