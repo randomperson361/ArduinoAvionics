@@ -24,7 +24,7 @@
 #include "Emic2TtsModule.h"
 
 //! Constructor.
-Emic2TtsModule::Emic2TtsModule(SoftwareSerial* serialPort) {
+Emic2TtsModule::Emic2TtsModule(HardwareSerial* serialPort) {
   _serialPort = serialPort;
 }
 
@@ -37,8 +37,19 @@ void Emic2TtsModule::init() {
   while (_serialPort->read() != ':');
 
   delay(10);
-
+  readyFlag = true;
   _serialPort->flush();
+}
+
+bool Emic2TtsModule::ready() {
+	if (!readyFlag)
+	{
+		if (_serialPort->read() == ':')
+		{
+			readyFlag = true;
+		}
+	}
+	return readyFlag;
 }
 
 //! Play English language speaking demo.
@@ -90,77 +101,77 @@ void Emic2TtsModule::restoreDefaults() {
 void Emic2TtsModule::say(const __FlashStringHelper *string) {
   _serialPort->print('S');
   _serialPort->print(string);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(const String &string) {
   _serialPort->print('S');
   _serialPort->print(string);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(const char s[]) {
   _serialPort->print('S');
   _serialPort->print(s);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(char c) {
   _serialPort->print('S');
   _serialPort->print(c);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(unsigned char c, int base) {
   _serialPort->print('S');
   _serialPort->print(c, base);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(int i, int base) {
   _serialPort->print('S');
   _serialPort->print(i, base);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(unsigned int i, int base) {
   _serialPort->print('S');
   _serialPort->print(i, base);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(long i, int base) {
   _serialPort->print('S');
   _serialPort->print(i, base);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(unsigned long i, int base) {
   _serialPort->print('S');
   _serialPort->print(i, base);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(double i, int digits) {
   _serialPort->print('S');
   _serialPort->print(i, digits);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Speak the passed in value, essentially a wrapper function for the function in Print.
 void Emic2TtsModule::say(const Printable& printable) {
   _serialPort->print('S');
   _serialPort->print(printable);
-  sendTerminatorAndWait();
+  sendTerminator();
 }
 
 //! Send a command to the Emic 2 and wait for it to respond.
@@ -179,6 +190,11 @@ void Emic2TtsModule::sendCommand(char command, int param) {
 //! Terminate a command and wait for the Emic 2 to respond.
 void Emic2TtsModule::sendTerminatorAndWait() {
   _serialPort->print('\n');
-  
   while (_serialPort->read() != ':');
+  readyFlag = true;
+}
+
+void Emic2TtsModule::sendTerminator() {
+	_serialPort->print('\n');
+	readyFlag = false;
 }

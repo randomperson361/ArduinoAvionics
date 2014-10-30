@@ -25,7 +25,6 @@
 #define Emic2TtsModule_h
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
 // Emic 2 voice values based on the module notes 
 enum EmicVoice {
@@ -56,9 +55,10 @@ enum EmicParser {
 class Emic2TtsModule {
   
   public:
-    Emic2TtsModule(SoftwareSerial* serialPort);
+    Emic2TtsModule(HardwareSerial* serialPort);
 
     void init();
+    bool ready();
 
     void playSpeakingDemo();
     void playSingingDemo();
@@ -88,7 +88,9 @@ class Emic2TtsModule {
     
   private:
     void sendTerminatorAndWait();
-    SoftwareSerial* _serialPort;
+    void sendTerminator();
+    HardwareSerial* _serialPort;
+    bool readyFlag;
 };
 
 #endif // Emic2TtsModule_h

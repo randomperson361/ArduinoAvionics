@@ -1,7 +1,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2014-10-28 15:29:02
+//This file has been generated on 2014-10-30 09:57:56
 
 #include "Arduino.h"
 #include <Arduino.h>
@@ -16,6 +16,7 @@
 #include "DHT.h"
 #include "DHT_U.h"
 #include "Adafruit_GPS.h"
+#include "Emic2TtsModule.h"
 static uint8_t openLogFile() ;
 static void closeLogFile() ;
 static void processRadio(uint8_t Signal) ;

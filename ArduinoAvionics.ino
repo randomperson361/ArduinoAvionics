@@ -15,6 +15,7 @@
 
 // Other external libraries
 #include "Adafruit_GPS.h"
+#include "Emic2TtsModule.h"
 
 // Enable MEGA 2560 additional serial ports
 extern HardwareSerial Serial1;
@@ -68,7 +69,9 @@ sensors_vec_t   orientation;
 sensors_event_t dht_event;
 sensors_event_t gyro_event;
 HardwareSerial GPSSerial = Serial1;
+HardwareSerial EMICSerial = Serial2;
 Adafruit_GPS GPS(&GPSSerial);
+Emic2TtsModule EMIC = Emic2TtsModule(&EMICSerial);
 
 // Define Program Functions
 static uint8_t openLogFile()
@@ -227,7 +230,7 @@ void printBaro()
 void updateDHT()
 {
 	dht.temperature().getEvent(&dht_event);
-	DHTTemp = dht_event.temperature;
+	DHTTemp = dht_event.temperature*(9./5.)+32.;
 	dht.humidity().getEvent(&dht_event);
 	DHTHum = dht_event.relative_humidity;
 }
@@ -239,7 +242,7 @@ void printDHT()
 	{
 		Serial.print(F("Temperature: "));
 		Serial.print(DHTTemp);
-		Serial.println(F(" *C"));
+		Serial.println(F(" *F"));
 	}
 	if (!isnan(DHTHum))
 	{
@@ -248,7 +251,7 @@ void printDHT()
 		Serial.println(F("%"));
 	}
 	Serial.print(F("Heat Index: "));
-	Serial.print(dht.computeHeatIndex((DHTTemp*(9./5.)+32.),DHTHum));
+	Serial.print(dht.computeHeatIndex(DHTTemp,DHTHum));
 	Serial.println("\n\n");
 }
 
@@ -281,11 +284,32 @@ void setup()
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   				// set NMEA printing rate
 	GPS.sendCommand(PMTK_API_SET_FIX_CTL_1HZ);					// set position update rate
 	useInterrupt(true);
+
+	// Initialize EMIC
+	EMICSerial.begin(9600);
+	EMIC.init();
+	EMIC.setVolume(18);
+	EMIC.setParser(DECtalk);
+	EMIC.say("All systems initiated.");
+	while(!EMIC.ready()){;}
+	delay(500);
+	EMIC.say("Hello, my name is Ventus Junior. I am a high altitude research aircraft.");
+	while(!EMIC.ready()){;}
+	delay(500);
+	EMIC.say("I would like to sing you an inspirational song.");
+	while(!EMIC.ready()){;}
+	delay(500);
+	EMIC.say("[:rate 180][:dv hs 95 br 0 as 90 ap 90 gn 75][dah<600,20>][dah<600,20>][dah<600,20>][dah<500,16>][dah<130,23>][dah<600,20>][dah<500,16>][dah<130,23>][dah<600,20>][:n0]");
 }
 
 // The loop function is called in an endless loop
 void loop()
 {
+	if (EMIC.ready())
+	{
+		//EMIC.playSingingDemo();
+	}
+
 	// Parse GPS data if available
 	if (GPS.newNMEAreceived())
 	{
