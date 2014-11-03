@@ -35,10 +35,9 @@ Emic2TtsModule::Emic2TtsModule(HardwareSerial* serialPort) {
 void Emic2TtsModule::init() {
   _serialPort->print('\n');
   while (_serialPort->read() != ':');
-
   delay(10);
-  readyFlag = true;
   _serialPort->flush();
+  readyFlag = true;
 }
 
 bool Emic2TtsModule::ready() {
